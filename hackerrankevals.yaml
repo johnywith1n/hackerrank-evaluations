@@ -1,0 +1,17 @@
+service: hackerrankevals
+runtime: python37
+
+instance_class: B4_1G
+basic_scaling:
+  idle_timeout: 960s
+  max_instances: 5
+
+inbound_services:
+- warmup
+
+handlers:
+- url: /static
+  static_dir: static
+
+
+entrypoint: gunicorn -b :$PORT main:application

@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}
+HackerRank Evaluations - Assign Evaluations
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row mb-3">
+            <div class="col-12">
+                <h3>Assign Evaluations</h3>
+                <p>Place emails, one per line to assign evaluations to</p>
+                <textarea class="form-control mb-3" id="emails-input-box" rows="8"></textarea>
+                <button id="update-emails-list-button" type="button" class="btn btn-primary">Use These Emails</button>
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-12">
+                <h3>Assign Percentages</h3>
+                <p>Set a percentage override for each person. People with blank percentages will recieve an equal amount from the remaining percentage left over</p>
+                <form id="create-assignments-form" method="POST">
+                    <div id="email-percentages-container" class="mb-3">
+
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Assignments</button>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block after_body %}
+    <script>
+    // dom elements
+    const emailsInputBox = document.getElementById('emails-input-box');
+    const updateEmailsButton = document.getElementById('update-emails-list-button');
+    const emailPercentagesContainer = document.getElementById('email-percentages-container');
+    const createAssignmentsForm = document.getElementById('create-assignments-form');
+
+    // state variables
+    let emails = [];
+    const validateEmail = (email) => {
+        const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+        return re.test(String(email).toLowerCase());
+    }
+
+    const createRowForEmail = (email) => {
+        const div = document.createElement('div');
+        div.className = 'form-group';
+
+        const label = document.createElement('label');
+        label.setAttribute('for', email);
+        label.innerText = `Percentage for ${email}:`;
+        div.appendChild(label);
+
+        const input = document.createElement('input');
+        input.className = 'form-control email-percentage';
+        input.name = email;
+        input.setAttribute('type', 'number');
+        input.setAttribute('min', 0);
+        input.setAttribute('max', 100);
+        div.appendChild(input);
+
+        return div;
+    };
+
+    const updateEmailsCallback = () => {
+        emails = emailsInputBox.value.split('\n').filter(validateEmail);
+        emails = new Set(emails);
+        emails = [...emails];
+        if (emails.length === 0) {
+            emailPercentagesContainer.innerHTML = 'Please input some emails and click the button below the text area';
+        } else {
+            emailPercentagesContainer.innerHTML = '';
+            emails.forEach(email => {
+                emailPercentagesContainer.appendChild(createRowForEmail(email));
+            });
+        }
+    };
+
+    updateEmailsButton.addEventListener("click", (e) => {
+        updateEmailsCallback();
+    });
+    updateEmailsCallback();
+
+    createAssignmentsForm.addEventListener("submit", function (event) {
+        const percentages = document.getElementsByClassName('email-percentage');
+        if (percentages.length === 0) {
+            alert('Please input some emails');
+            event.preventDefault();
+        }
+        let sum = 0;
+        Array.from(percentages).forEach(elem => {
+            sum += parseInt(elem.value || 0);
+        });
+        if (sum < 0 || sum > 100) {
+            alert("Percentages must add up such that they're between 0 and 100");
+            event.preventDefault();
+        }
+    }, false);
+
+    </script>
+{% endblock %}

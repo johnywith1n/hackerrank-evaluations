@@ -1,0 +1,9 @@
+.idea/
+__pycache__/
+env/
+.DS_Store
+
+config.ini
+client_secret*.json
+cert.pem
+key.pem

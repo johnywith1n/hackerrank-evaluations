@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}
+HackerRank Evaluations - Admin - Permissions
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row mb-3 mt-3">
+            <div class="col-12">
+                <h3>Look Up User</h3>
+                <div class="mt-3">
+                    <div class="btn-group">
+                        <button id="selected-user-email" class="btn btn-light dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
+                        <div id="selected-user-email-dropdown" class="dropdown-menu">
+                            <input class="form-control" id="selected-user-email-input" type="text" placeholder="Search..">
+                            {% for id, email in users.items() %}
+                                <a class="dropdown-item" href="#" data-id="{{id}}">{{email}}</a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <button id="selected-user-email-fetch-button" class="btn btn-primary" type="button">
+                        Look up user
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="row mb-3" id="form-container" style="display:none">
+            <div class="col-12">
+                <h3>Edit User</h3>
+                <form action="/admin/perms" method="POST">
+                    <input type="hidden" id="form-user-id" name="user-id" />
+                    <div class="form-group">
+                        <label for="form-email">Email</label>
+                        <input type="text" class="form-control" id="form-email" name="email" readonly />
+                    </div>
+                    <p>Permissions</p>
+                    {% for perm_id, perm_name in USER_PERMS.items() %}
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input class="form-check-input form-perm-checkbox" type="checkbox" name="form-perm-{{perm_id}}" id="form-perm-{{perm_id}}">
+                            <label class="form-check-label" for="form-perm-{{perm_id}}">
+                            {{perm_name}}
+                            </label>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <button id="update-config-submit-button" type="submit" class="btn btn-primary">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block after_body %}
+    <script>
+    // dom elements
+    const emailDropdown = document.getElementById('selected-user-email-dropdown');
+    const emailValueButton = document.getElementById('selected-user-email');
+    const emailSearchInput = document.getElementById('selected-user-email-input');
+    const emailFetchButton = document.getElementById('selected-user-email-fetch-button');
+
+    const formContainer = document.getElementById('form-container');
+    const formEmailInput = document.getElementById('form-email');
+    const formUserIdInput = document.getElementById('form-user-id');
+
+
+    // state variables
+    let selectedUserId = null;
+    let fetchedUser = null;
+
+    // set search on dropfown
+    emailSearchInput.addEventListener('keyup', () => {
+        const filter = emailSearchInput.value.toLowerCase();
+        Array.from(emailDropdown.getElementsByTagName('a')).forEach(e => {
+            if (e.innerText.toLowerCase().includes(filter)) {
+                e.style.display = 'block';
+            } else {
+                e.style.display = 'none';
+            }
+        });
+    });
+
+    // handle selecting a config
+    const updateSelectedUser = (id, email) => {
+        if (id == null) {
+            emailValueButton.innerText = "Select an email"
+        } else {
+            selectedUserId = id;
+            emailValueButton.innerText = email;
+        }
+    };
+    emailDropdown.addEventListener("click", (e) => {
+        if (e.target && e.target.matches('a.dropdown-item')) {
+            updateSelectedUser(e.target.dataset.id, e.target.innerText);
+        }
+    });
+    updateSelectedUser();
+
+    const updateForm = () => {
+        formContainer.style.display = 'block';
+
+        formUserIdInput.value = fetchedUser.id;
+        formEmailInput.value = fetchedUser.email;
+        Array.from(document.getElementsByClassName('form-perm-checkbox')).forEach(elem => {
+            elem.checked = false;
+        });
+
+        if (fetchedUser.perms) {
+            fetchedUser.perms.forEach(perm => {
+                document.getElementById('form-perm-' + perm).checked = true;
+            });
+        }
+    };
+
+    // handle lookup config
+    const lookupUser = (id) => {
+        formContainer.style.display = 'none';
+        fetch(`/admin/perms/${id}`).then(res => {
+            if (res.status !== 200) {
+                console.log('Looks like there was a problem. Status Code: ' + res.status);
+                alert('Unable to fetch user');
+                return;
+              }
+
+              res.json().then((data) => {
+                fetchedUser = data.data;
+                updateForm();
+              });
+        }).catch(err => {
+            console.log('Fetch Error :-S', err);
+            alert('Unable to fetch config');
+        });
+    };
+
+    emailFetchButton.addEventListener("click", () => {
+        if (selectedUserId == null) {
+            alert('Please select a user');
+            return;
+        }
+
+        lookupUser(selectedUserId);
+    });
+    </script>
+{% endblock %}

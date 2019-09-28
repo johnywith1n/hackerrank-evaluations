@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}
+HackerRank Evaluations
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row mb-3">
+            <div class="col-12">
+                <h3>Your Outstanding Evaluations</h3>
+                <div>
+                    <ul>
+                        {% for date in assignments_by_date %}
+                        <li>
+                            Due: {{date}}
+                            <ul>
+                                {% for assignment in assignments_by_date[date] %}
+                                 <li>
+                                    <a href="{{CANDIDATE_CODE_REVIEW_EVALUATION_URL.format(assignment.get(Assignment.report_url), code_review_test_id)}}" target="_blank">
+                                        {{CANDIDATE_CODE_REVIEW_EVALUATION_URL.format(assignment.get(Assignment.report_url), code_review_test_id)}}
+                                    </a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-12">
+                <form action="/update_evaluation_status" method="POST">
+                    <button type="submit" class="btn btn-primary">Clear out finished evaluations</button>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block after_body %}
+    <script>
+
+    </script>
+{% endblock %}

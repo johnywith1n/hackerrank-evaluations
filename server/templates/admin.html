@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}
+HackerRank Evaluations - Admin
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row mb-1">
+            <div class="col-12">
+                <h3>Admin</h3>
+                <ul>
+                    <li>
+                        <a href="/admin/configs">Configs</a>
+                    </li>
+                    <li>
+                        <a href="/admin/perms">User Permissions</a>
+                    </li>
+                </ul>
+                <h3 style="color:red">Dangerous</h3>
+                <ul>
+                    <li>
+                        <a href="/admin/delete_all_assignments" class="confirm" style="color:red">Delete All Assignments</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block after_body %}
+    <script>
+        const confirmBeforeContinuing = document.getElementsByClassName('confirm')
+        Array.from(confirmBeforeContinuing).forEach(elem => {
+            elem.addEventListener('click', e => {
+                if (!confirm('Are you sure?')) e.preventDefault();
+            });
+        });
+    </script>
+{% endblock %}

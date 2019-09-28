@@ -1,0 +1,9 @@
+.idea/
+__pycache__/
+env/
+.DS_Store
+
+config.example.ini
+cert.pem
+key.pem
+

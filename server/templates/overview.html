@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}
+HackerRank Evaluations
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row mt-3 mb-3">
+            <div class="col-12">
+                <form action="/overview_update_evaluation_status" method="POST">
+                    <button type="submit" class="btn btn-primary">Clear out finished evaluations</button>
+                </form>
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-12">
+                <h3>Evaluations Overview</h3>
+                <div>
+                    <ul>
+                        {% for email in assignments_by_user_and_date %}
+                        <li>
+                            Email: {{email}}
+                            <ul>
+                                {% for date in sorted(assignments_by_user_and_date[email].keys()) %}
+                                <ul>
+                                    <li>
+                                        Date: {{date}}
+                                        {% for assignment in assignments_by_user_and_date[email][date] %}
+                                            <ul>
+                                                <li>
+                                                    <a href="{{CANDIDATE_CODE_REVIEW_EVALUATION_URL.format(assignment.get(Assignment.report_url), code_review_test_id)}}" target="_blank">
+                                                        {{CANDIDATE_CODE_REVIEW_EVALUATION_URL.format(assignment.get(Assignment.report_url), code_review_test_id)}}
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        {% endfor %}
+                                    </li>
+                                </ul>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block after_body %}
+    <script>
+
+    </script>
+{% endblock %}

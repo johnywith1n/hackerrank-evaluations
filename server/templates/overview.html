@@ -25,7 +25,7 @@ HackerRank Evaluations
                                 {% for date in sorted(assignments_by_user_and_date[email].keys()) %}
                                 <ul>
                                     <li>
-                                        Date: {{date}}
+                                        Date: {{convert_timestamp_to_pacific_datetime(date)}}
                                         {% for assignment in assignments_by_user_and_date[email][date] %}
                                             <ul>
                                                 <li>

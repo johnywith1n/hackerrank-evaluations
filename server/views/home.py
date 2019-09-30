@@ -30,11 +30,13 @@ def main():
             code_review_test_id = ''
         assignments_by_date = defaultdict(list)
         for a in assignments:
-            date = convert_timestamp_to_pacific_datetime(a.get(Assignment.deadline))
+            date = int(a.get(Assignment.deadline))
             assignments_by_date[date].append(a)
         return render_template('home.html',
                                assignments_by_date=assignments_by_date,
                                code_review_test_id=code_review_test_id,
+                               sorted=sorted,
+                               convert_timestamp_to_pacific_datetime=convert_timestamp_to_pacific_datetime,
                                Assignment=Assignment,
                                CANDIDATE_CODE_REVIEW_EVALUATION_URL=CANDIDATE_CODE_REVIEW_EVALUATION_URL)
     else:

@@ -11,9 +11,9 @@ HackerRank Evaluations
                 <h3>Your Outstanding Evaluations</h3>
                 <div>
                     <ul>
-                        {% for date in assignments_by_date %}
+                        {% for date in sorted(assignments_by_date.keys()) %}
                         <li>
-                            Due: {{date}}
+                            Due: {{convert_timestamp_to_pacific_datetime(date)}}
                             <ul>
                                 {% for assignment in assignments_by_date[date] %}
                                  <li>

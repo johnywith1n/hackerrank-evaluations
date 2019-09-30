@@ -26,12 +26,13 @@ def overview_home():
         code_review_test_id = ''
     assignments_by_user_and_date = defaultdict(lambda: defaultdict(list))
     for a in assignments:
-        date = convert_timestamp_to_pacific_datetime(a.get(Assignment.deadline))
+        date = int(a.get(Assignment.deadline))
         assignments_by_user_and_date[a.get(Assignment.assignee_email)][date].append(a)
     return render_template('overview.html',
                            sorted=sorted,
                            assignments_by_user_and_date=assignments_by_user_and_date,
                            code_review_test_id=code_review_test_id,
+                           convert_timestamp_to_pacific_datetime=convert_timestamp_to_pacific_datetime,
                            Assignment=Assignment,
                            CANDIDATE_CODE_REVIEW_EVALUATION_URL=hackerrank_client.CANDIDATE_CODE_REVIEW_EVALUATION_URL)
 

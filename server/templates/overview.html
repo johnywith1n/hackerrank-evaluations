@@ -27,13 +27,13 @@ HackerRank Evaluations
                                     <li>
                                         Date: {{convert_timestamp_to_pacific_datetime(date)}}
                                         {% for assignment in assignments_by_user_and_date[email][date] %}
-                                            <ul>
+                                            <ol>
                                                 <li>
                                                     <a href="{{CANDIDATE_CODE_REVIEW_EVALUATION_URL.format(assignment.get(Assignment.report_url), code_review_test_id)}}" target="_blank">
                                                         {{CANDIDATE_CODE_REVIEW_EVALUATION_URL.format(assignment.get(Assignment.report_url), code_review_test_id)}}
                                                     </a>
                                                 </li>
-                                            </ul>
+                                            </ol>
                                         {% endfor %}
                                     </li>
                                 </ul>

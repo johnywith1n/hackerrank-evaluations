@@ -14,7 +14,7 @@ HackerRank Evaluations
                         {% for date in sorted(assignments_by_date.keys()) %}
                         <li>
                             Due: {{convert_timestamp_to_pacific_datetime(date)}}
-                            <ul>
+                            <ol>
                                 {% for assignment in assignments_by_date[date] %}
                                  <li>
                                     <a href="{{CANDIDATE_CODE_REVIEW_EVALUATION_URL.format(assignment.get(Assignment.report_url), code_review_test_id)}}" target="_blank">
@@ -22,7 +22,7 @@ HackerRank Evaluations
                                     </a>
                                 </li>
                                 {% endfor %}
-                            </ul>
+                            </ol>
                         </li>
                         {% endfor %}
                     </ul>

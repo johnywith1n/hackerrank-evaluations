@@ -99,17 +99,17 @@ def create_assignments(email_to_percent, emails_with_overridden_percentage, max_
     if error:
         return error
 
-    if max_assignments_per_person is not None:
-        max_assignments = max_assignments_per_person * len(email_to_percent)
-        if max_assignments < len(candidates):
-            candidates = candidates[:max_assignments]
-
     candidate_ids = [c['id'] for c in candidates]
     unassigned_candidate_ids = Assignment.get_candidates_without_assignments(candidate_ids)
     candidates = [c for c in candidates if c['id'] in unassigned_candidate_ids]
 
     if not candidates:
         return None
+
+    if max_assignments_per_person is not None:
+        max_assignments = max_assignments_per_person * len(email_to_percent)
+        if max_assignments < len(candidates):
+            candidates = candidates[:max_assignments]
 
     total_num_candidates = len(candidates)
     assignments_tuples = []

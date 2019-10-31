@@ -35,7 +35,7 @@ def get_candidates():
     offset = 0
     limit = 100
     while has_more:
-        params = dict(limit=limit, offset=offset, fields='id,ats_state,report_url,score')
+        params = dict(limit=limit, offset=offset, fields='id,ats_state,report_url,score', sort='-attempt_endtime')
         r = session.get(api_url, params=params)
         res_json = r.json()
         if r.status_code != 200:

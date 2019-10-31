@@ -42,13 +42,14 @@ def process_assignments():
     email_to_percent = {}
     max_assignments_per_person = None
     for key, value in request.form.items():
-        if key == 'max_assignments_per_person' and value:
-            try:
-                max_assignments_per_person = int(value)
-                continue
-            except:
-                flash('Invalid number for max assignments per person {}'.format(value), 'danger')
-                return redirect(url_for('assignment.assign_home'))
+        if key == 'max_assignments_per_person':
+            if value:
+                try:
+                    max_assignments_per_person = int(value)
+                except:
+                    flash('Invalid number for max assignments per person {}'.format(value), 'danger')
+                    return redirect(url_for('assignment.assign_home'))
+            continue
 
         email = key
         percent = value

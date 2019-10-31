@@ -35,7 +35,8 @@ def get_candidates():
     offset = 0
     limit = 100
     while has_more:
-        params = dict(limit=limit, offset=offset, fields='id,ats_state,report_url,score', sort='-attempt_endtime')
+        params = dict(limit=limit, offset=offset, fields='id,report_url,score', ats_state=STATUS_EVALUATION,
+                      sort='-attempt_endtime')
         r = session.get(api_url, params=params)
         res_json = r.json()
         if r.status_code != 200:
@@ -52,5 +53,4 @@ def get_candidates_for_evaluation():
     if error:
         return None, error
 
-    return [c for c in candidates if
-            c.get('ats_state') == STATUS_EVALUATION and c.get('score') >= MIN_SCORE_TO_ASSIGN], None
+    return [c for c in candidates if c.get('score') >= MIN_SCORE_TO_ASSIGN], None

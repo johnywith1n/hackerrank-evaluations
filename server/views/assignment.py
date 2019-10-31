@@ -159,12 +159,9 @@ def update_evaluation_status():
         flash('Unable to fetch hackerrank candidates', 'danger')
         return redirect(url_for('home.main'))
 
-    candidate_to_status_mapping = {
-        c['id']: c['ats_state'] for c in candidates
-    }
+    candidate_ids = set([c['id'] for c in candidates])
 
-    finished_assignments = [a for a in assignments if candidate_to_status_mapping.get(
-        a.get(Assignment.candidate_id)) != hackerrank_client.STATUS_EVALUATION]
+    finished_assignments = [a for a in assignments if a.get(Assignment.candidate_id) not in candidate_ids]
     try:
         Assignment.bulk_delete([a.key for a in finished_assignments])
         flash('Removed finished evaluations', 'primary')

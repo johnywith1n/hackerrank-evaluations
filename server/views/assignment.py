@@ -40,7 +40,19 @@ def process_assignments():
     emails_with_no_percentage = []
     emails_with_overridden_percentage = set()
     email_to_percent = {}
-    for email, percent in request.form.items():
+    max_assignments_per_person = None
+    for key, value in request.form.items():
+        if key == 'max_assignments_per_person' and value:
+            try:
+                max_assignments_per_person = int(value)
+                continue
+            except:
+                flash('Invalid number for max assignments per person {}'.format(value), 'danger')
+                return redirect(url_for('assignment.assign_home'))
+
+        email = key
+        percent = value
+
         if not percent:
             emails_with_no_percentage.append(email)
         else:
@@ -70,7 +82,8 @@ def process_assignments():
         return redirect(url_for('assignment.assign_home'))
 
     try:
-        error = create_assignments(email_to_percent, emails_with_overridden_percentage)
+        error = create_assignments(email_to_percent, emails_with_overridden_percentage,
+                                   max_assignments_per_person=max_assignments_per_person)
         if error:
             flash('Unable to fetch hackerrank candidates', 'danger')
         else:
@@ -81,10 +94,15 @@ def process_assignments():
     return redirect(url_for('assignment.assign_home'))
 
 
-def create_assignments(email_to_percent, emails_with_overridden_percentage):
+def create_assignments(email_to_percent, emails_with_overridden_percentage, max_assignments_per_person=None):
     candidates, error = hackerrank_client.get_candidates_for_evaluation()
     if error:
         return error
+
+    if max_assignments_per_person is not None:
+        max_assignments = max_assignments_per_person * len(email_to_percent)
+        if max_assignments < len(candidates):
+            candidates = candidates[:max_assignments]
 
     candidate_ids = [c['id'] for c in candidates]
     unassigned_candidate_ids = Assignment.get_candidates_without_assignments(candidate_ids)
@@ -154,4 +172,3 @@ def update_evaluation_status():
         flash('Unable to update evaluations', 'danger')
 
     return redirect(url_for('home.main'))
-

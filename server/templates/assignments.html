@@ -14,18 +14,24 @@ HackerRank Evaluations - Assign Evaluations
                 <button id="update-emails-list-button" type="button" class="btn btn-primary">Use These Emails</button>
             </div>
         </div>
-        <div class="row mb-3">
-            <div class="col-12">
-                <h3>Assign Percentages</h3>
-                <p>Set a percentage override for each person. People with blank percentages will recieve an equal amount from the remaining percentage left over</p>
-                <form id="create-assignments-form" method="POST">
-                    <div id="email-percentages-container" class="mb-3">
-
-                    </div>
-                    <button type="submit" class="btn btn-primary">Create Assignments</button>
-                </form>
+        <form id="create-assignments-form" method="POST">
+            <div class="row mb-3">
+                <div class="col-12">
+                    <h3>Max Assignments Per person</h3>
+                    <p>Optional: Input a number to restrict the max number of assignments per person</p>
+                    <input class="form-control" name="max_assignments_per_person" type="number" min="1">
+                </div>
             </div>
-        </div>
+            <div class="row mb-3">
+                <div class="col-12">
+                    <h3>Assign Percentages</h3>
+                    <p>Set a percentage override for each person. People with blank percentages will recieve an equal amount from the remaining percentage left over</p>
+                        <div id="email-percentages-container" class="mb-3">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Create Assignments</button>
+                </div>
+            </div>
+        </form>
     </div>
 {% endblock %}
 {% block after_body %}

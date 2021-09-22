@@ -1,3 +1,4 @@
+from collections import defaultdict
 import logging
 from functools import wraps
 
@@ -7,6 +8,7 @@ from flask_login import (
     login_required,
 )
 
+from server.datastore_models.tests import Test
 from server.datastore_models.users import UserPermissions
 from server.hackerrank_client import client as hackerrank_client
 from server.datastore_models.assignments import Assignment, AssignmentNamedTuple
@@ -29,7 +31,8 @@ def assign_perm_required(fn):
 @login_required
 @assign_perm_required
 def assign_home():
-    return render_template('assignments.html')
+    return render_template('assignments.html',
+                            tests=Test.get_all_tests_mapped_by_id())
 
 
 @assignment_blueprint.route("/assign_evaluations", methods=['POST'])
@@ -41,7 +44,15 @@ def process_assignments():
     emails_with_overridden_percentage = set()
     email_to_percent = {}
     max_assignments_per_person = None
+    test = None
     for key, value in request.form.items():
+        if key == 'test_id':
+            test = Test.get(value)
+            if test is None:
+                flash('Invalid test id {}'.format(key), 'danger')
+                return redirect(url_for('assignment.assign_home'))
+            continue
+
         if key == 'max_assignments_per_person':
             if value:
                 try:
@@ -69,6 +80,10 @@ def process_assignments():
                 flash('Invalid percentage assignment', 'danger')
                 return redirect(url_for('assignment.assign_home'))
 
+    if test is None:
+        flash('Missing test id', 'danger')
+        return redirect(url_for('assignment.assign_home'))
+
     if emails_with_no_percentage:
         percentage_for_remaining_emails = available_percentage / len(emails_with_no_percentage)
         for email in emails_with_no_percentage:
@@ -83,8 +98,11 @@ def process_assignments():
         return redirect(url_for('assignment.assign_home'))
 
     try:
-        error = create_assignments(email_to_percent, emails_with_overridden_percentage,
-                                   max_assignments_per_person=max_assignments_per_person)
+        error = create_assignments(
+            email_to_percent,
+            emails_with_overridden_percentage,
+            test[Test.test_id],
+            max_assignments_per_person=max_assignments_per_person)
         if error:
             flash('Unable to fetch hackerrank candidates', 'danger')
         else:
@@ -95,13 +113,13 @@ def process_assignments():
     return redirect(url_for('assignment.assign_home'))
 
 
-def create_assignments(email_to_percent, emails_with_overridden_percentage, max_assignments_per_person=None):
-    candidates, error = hackerrank_client.get_candidates_for_evaluation()
+def create_assignments(email_to_percent, emails_with_overridden_percentage, test_id, max_assignments_per_person=None):
+    candidates, error = hackerrank_client.get_candidates_for_evaluation(test_id)
     if error:
         return error
 
     candidate_ids = [c['id'] for c in candidates]
-    unassigned_candidate_ids = Assignment.get_candidates_without_assignments(candidate_ids)
+    unassigned_candidate_ids = Assignment.get_candidates_without_assignments(candidate_ids, test_id)
     candidates = [c for c in candidates if c['id'] in unassigned_candidate_ids]
 
     if not candidates:
@@ -124,8 +142,12 @@ def create_assignments(email_to_percent, emails_with_overridden_percentage, max_
         del candidates[-num_candidates:]
         if batch:
             for candidate in batch:
-                assignments_tuples.append(AssignmentNamedTuple(assignee_email=email, candidate_id=candidate['id'],
-                                                               report_url=candidate['report_url']))
+                assignments_tuples.append(AssignmentNamedTuple(
+                    assignee_email=email,
+                    candidate_id=candidate['id'],
+                    report_url=candidate['report_url'],
+                    test_id=test_id
+                    ))
         if not candidates:
             break
 
@@ -140,7 +162,9 @@ def create_assignments(email_to_percent, emails_with_overridden_percentage, max_
         for candidate in candidates:
             assignments_tuples.append(AssignmentNamedTuple(assignee_email=emails[index % num_emails],
                                                            candidate_id=candidate['id'],
-                                                           report_url=candidate['report_url']))
+                                                           report_url=candidate['report_url'],
+                                                           test_id=test_id
+                                                           ))
             index = index + 1
 
     Assignment.bulk_create(assignments_tuples)
@@ -154,14 +178,20 @@ def update_evaluation_status():
     if not assignments:
         return redirect(url_for('home.main'))
 
-    candidates, error = hackerrank_client.get_candidates_for_evaluation()
-    if error:
-        flash('Unable to fetch hackerrank candidates', 'danger')
-        return redirect(url_for('home.main'))
+    assignments_by_test = defaultdict(list)
+    for a in assignments:
+        assignments_by_test[a[Assignment.test_id]].append(a)
 
-    candidate_ids = set([c['id'] for c in candidates])
+    finished_assignments = []
+    for test_id in assignments_by_test:
+        candidates, error = hackerrank_client.get_candidates_for_evaluation(test_id)
+        if error:
+            flash('Unable to fetch hackerrank candidates', 'danger')
+            return redirect(url_for('home.main'))
 
-    finished_assignments = [a for a in assignments if a.get(Assignment.candidate_id) not in candidate_ids]
+        candidate_ids = set([c['id'] for c in candidates])
+
+        finished_assignments.extend([a for a in assignments if a.get(Assignment.candidate_id) not in candidate_ids])
     try:
         Assignment.bulk_delete([a.key for a in finished_assignments])
         flash('Removed finished evaluations', 'primary')

@@ -8,39 +8,54 @@ HackerRank Evaluations - Admin - Configs
     <div class="container">
         <div class="row mt-3 mb-3">
             <div class="col-12">
-                <h3>Look Up Config</h3>
+                <h3>Tests</h3>
                 <div>
                     <div class="btn-group">
-                        <button id="config-key-dropdown-button" class="btn btn-light dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <button id="tests-dropdown-button" class="btn btn-light dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         </button>
-                        <div id="config-key-dropdown" class="dropdown-menu">
-                            <input class="form-control" id="config-key-dropdown-input" type="text" placeholder="Search..">
-                            {% for key, value in appconfigs_keys.items() %}
-                                <a class="dropdown-item" href="#" data-key="{{key}}">{{value}}</a>
+                        <div id="tests-dropdown" class="dropdown-menu">
+                            <input class="form-control" id="tests-dropdown-input" type="text" placeholder="Search..">
+                            {% for test_id, test in tests.items() %}
+                                <a class="dropdown-item" href="#" data-key="{{test_id}}">{{test['name']}}</a>
                             {% endfor %}
                         </div>
                     </div>
                     <div class="mt-3">
-                        <button id="config-key-dropdown-lookup-button" class="btn btn-primary" type="button">
-                            Look up config
-                        </button>
+                        <div>
+                            Name: <span id="display-test-name"></span>
+                        </div>
+                        <div>
+                            Test ID: <span id="display-test-id"></span>
+                        </div>
+                        <div>
+                            Question ID: <span id="display-test-question-id"></span>
+                        </div>
+                        <div class="mt-3">
+                            <button id="test-delete-button" class="btn btn-danger" type="button">
+                                Delete Test
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="row mb-3">
             <div class="col-12">
-                <h3>Update Configs</h3>
-                <form action="/admin/configs" method="POST">
+                <h3>Add Test</h3>
+                <form action="/admin/tests" method="POST">
                     <div class="form-group">
-                        <label for="config-key-to-update">Key</label>
-                        <input type="text" class="form-control" id="config-key-to-update" name="config-key" readonly placeholder="Look up the key you want to update first" />
+                        <label for="test-name">Test name</label>
+                        <input type="text" class="form-control" id="test-name" name="test-name" placeholder="Test name" />
                     </div>
                     <div class="form-group">
-                        <label for="config-value-to-update">Value</label>
-                        <input type="text" class="form-control" id="config-value-to-update"  name="config-value" />
+                        <label for="test-id">Test ID</label>
+                        <input type="text" class="form-control" id="test-id"  name="test-id" placeholder="Test ID"/>
                     </div>
-                    <button id="update-config-submit-button" type="submit" class="btn btn-primary">Submit</button>
+                    <div class="form-group">
+                        <label for="test-question-id">Test Question ID</label>
+                        <input type="text" class="form-control" id="test-question-id"  name="test-question-id" placeholder="Test Question ID" />
+                    </div>
+                    <button id="add-new-test" type="submit" class="btn btn-primary">Add Test</button>
                 </form>
             </div>
         </div>
@@ -48,22 +63,28 @@ HackerRank Evaluations - Admin - Configs
 {% endblock %}
 {% block after_body %}
     <script>
-    // dom elements
-    const configKeyDropdownMenu = document.getElementById('config-key-dropdown');
-    const configKeyDropdownButton = document.getElementById('config-key-dropdown-button');
-    const configKeyDropdownInput = document.getElementById('config-key-dropdown-input');
-    const configKeyLookupButton = document.getElementById('config-key-dropdown-lookup-button');
+    const tests = {{ tests|tojson|safe }};
 
-    const configKeyToUpdateInput = document.getElementById('config-key-to-update');
-    const configValueToUpdateInput = document.getElementById('config-value-to-update');
+    // dom elements
+    const testsDropdownMenu = document.getElementById('tests-dropdown');
+    const testsDropdownButton = document.getElementById('tests-dropdown-button');
+    const testsDropdownInput = document.getElementById('tests-dropdown-input');
+
+    const addTestButton = document.getElementById('add-new-test');
+    const deleteTestButton = document.getElementById('test-delete-button');
+
+    const testNameDisplay = document.getElementById('display-test-name');
+    const testIdDisplay = document.getElementById('display-test-id');
+    const testQuestionIdDisplay = document.getElementById('display-test-question-id');
 
     // state variables
-    let currentConfigKey = null;
+    let currentTestId = null;
+    let currentTest = null;
 
     // set search on dropfown
-    configKeyDropdownInput.addEventListener('keyup', () => {
-        const filter = configKeyDropdownInput.value.toLowerCase();
-        Array.from(configKeyDropdownMenu.getElementsByTagName('a')).forEach(e => {
+    testsDropdownInput.addEventListener('keyup', () => {
+        const filter = testsDropdownInput.value.toLowerCase();
+        Array.from(testsDropdownMenu.getElementsByTagName('a')).forEach(e => {
             if (e.innerText.toLowerCase().includes(filter)) {
                 e.style.display = 'block';
             } else {
@@ -73,47 +94,51 @@ HackerRank Evaluations - Admin - Configs
     });
 
     // handle selecting a config
-    const updateConfigKeyValue = (key, value) => {
+    const updateTestValue = (key, value) => {
         if (value == null) {
-            configKeyDropdownButton.innerText = "Select a key"
+            testsDropdownButton.innerText = "Select a key"
         } else {
-            currentConfigKey = key;
-            configKeyDropdownButton.innerText = value;
+            currentTestId = key;
+            currentTest = tests[key];
+
+            testsDropdownButton.innerText = value;
+
+            testNameDisplay.innerText = currentTest.name;
+            testIdDisplay.innerText = currentTest.test_id;
+            testQuestionIdDisplay.innerText = currentTest.question_id;
         }
     };
-    configKeyDropdownMenu.addEventListener("click", (e) => {
+    testsDropdownMenu.addEventListener("click", (e) => {
         if (e.target && e.target.matches('a.dropdown-item')) {
-            updateConfigKeyValue(e.target.dataset.key, e.target.innerText);
+            updateTestValue(e.target.dataset.key, e.target.innerText);
         }
     });
-    updateConfigKeyValue();
 
-    // handle lookup config
-    const lookupConfig = (key) => {
-        fetch(`/admin/configs/${key}`).then(res => {
-            if (res.status !== 200) {
-                console.log('Looks like there was a problem. Status Code: ' + res.status);
-                alert('Unable to fetch config');
-                return;
-              }
+    updateTestValue();
 
-              res.json().then((data) => {
-                configKeyToUpdateInput.value = data.key;
-                configValueToUpdateInput.value = data.value;
-              });
-        }).catch(err => {
-            console.log('Fetch Error :-S', err);
-            alert('Unable to fetch config');
-        });
-    };
-
-    configKeyLookupButton.addEventListener("click", () => {
-        if (currentConfigKey == null) {
-            alert('Please select a config key');
+    deleteTestButton.addEventListener("click", (e) => {
+        if (currentTestId == null) {
+            alert('Please select a test');
             return;
         }
-
-        lookupConfig(currentConfigKey);
+        const confirmDelete = confirm('Are you sure you want to delete this test?');
+        if (confirmDelete) {
+            const formData = new FormData();
+            formData.append('test-id', currentTestId);
+            fetch('/admin/tests', {
+                method: 'DELETE',
+                body: formData
+            }).then((res) => {
+                if (res.status !== 200) {
+                    alert('Unable to delete tests');
+                    return;
+                }
+                window.location.reload();
+            }).catch(function(err) {
+                console.log('Delete Error :-S', err);
+                alert('Unable to delete test');
+            });
+        }
     });
     </script>
 {% endblock %}

@@ -5,8 +5,9 @@ from flask_login import (
     login_required,
 )
 
-from server.datastore_models.appconfigs import AppConfig, AppConfigKeys
 from server.datastore_models.assignments import Assignment
+from server.datastore_models.tests import Test
+
 from server.hackerrank_client.client import CANDIDATE_CODE_REVIEW_EVALUATION_URL
 
 from server.util import convert_timestamp_to_pacific_datetime
@@ -23,18 +24,23 @@ def ah_start():
 def main():
     if current_user.is_authenticated:
         assignments = Assignment.get_assignments_for_assignee(current_user.email)
-        code_review_test_id = AppConfig.get(AppConfigKeys.QUESTION_ID)
-        if code_review_test_id:
-            code_review_test_id = code_review_test_id.get(AppConfig.value)
-        else:
-            code_review_test_id = ''
-        assignments_by_date = defaultdict(list)
+        tests = Test.get_all_tests()
+        test_id_question_id_mapping = {
+            t[Test.test_id]: t[Test.question_id] for t in tests
+        }
+        test_id_name_mapping = {
+            t[Test.test_id]: t[Test.name] for t in tests
+        }
+
+        assignments_by_test_and_date = defaultdict(lambda: defaultdict(list))
         for a in assignments:
+            test_id = a.get(Assignment.test_id)
             date = int(a.get(Assignment.deadline))
-            assignments_by_date[date].append(a)
+            assignments_by_test_and_date[test_id][date].append(a)
         return render_template('home.html',
-                               assignments_by_date=assignments_by_date,
-                               code_review_test_id=code_review_test_id,
+                               assignments=assignments_by_test_and_date,
+                               test_id_question_id_mapping=test_id_question_id_mapping,
+                               test_id_name_mapping=test_id_name_mapping,
                                sorted=sorted,
                                convert_timestamp_to_pacific_datetime=convert_timestamp_to_pacific_datetime,
                                Assignment=Assignment,

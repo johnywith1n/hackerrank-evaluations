@@ -17,6 +17,19 @@ HackerRank Evaluations - Assign Evaluations
         <form id="create-assignments-form" method="POST">
             <div class="row mb-3">
                 <div class="col-12">
+                    <h3>Select Test</h3>
+                    <div class="btn-group">
+                        <select id="test-selection" name="test_id" class="custom-select">
+                            <option value="" selected>Open this select menu</option>
+                            {% for test_id, test in tests.items() %}
+                                <option value="{{test_id}}">{{test['name']}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-12">
                     <h3>Max Assignments Per person</h3>
                     <p>Optional: Input a number to restrict the max number of assignments per person</p>
                     <input class="form-control" name="max_assignments_per_person" type="number" min="1">
@@ -36,11 +49,14 @@ HackerRank Evaluations - Assign Evaluations
 {% endblock %}
 {% block after_body %}
     <script>
+    const tests = {{ tests|tojson|safe }};
+
     // dom elements
     const emailsInputBox = document.getElementById('emails-input-box');
     const updateEmailsButton = document.getElementById('update-emails-list-button');
     const emailPercentagesContainer = document.getElementById('email-percentages-container');
     const createAssignmentsForm = document.getElementById('create-assignments-form');
+    const testSelectElement = document.getElementById('test-selection');
 
     // state variables
     let emails = [];
@@ -94,6 +110,12 @@ HackerRank Evaluations - Assign Evaluations
             alert('Please input some emails');
             event.preventDefault();
         }
+
+        if (testSelectElement.value == null || testSelectElement.value === '') {
+            alert('Please select a test');
+            event.preventDefault();
+        }
+
         let sum = 0;
         Array.from(percentages).forEach(elem => {
             sum += parseInt(elem.value || 0);

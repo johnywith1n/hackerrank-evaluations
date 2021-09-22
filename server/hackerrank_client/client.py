@@ -4,7 +4,6 @@ import requests
 
 import config
 
-from server.datastore_models.appconfigs import AppConfig, AppConfigKeys
 
 # fill in the blank with the test id
 CANDIDATES_API_URL = 'https://www.hackerrank.com/x/api/v3/tests/{}/candidates'
@@ -18,13 +17,7 @@ STATUS_EVALUATION = 1
 MIN_SCORE_TO_ASSIGN = 100
 
 
-def get_candidates():
-    test_id_config = AppConfig.get(AppConfigKeys.TEST_ID)
-    if not test_id_config or not test_id_config.get(AppConfig.value):
-        return None, 'Test Id config not set'
-
-    test_id = test_id_config.get(AppConfig.value)
-
+def get_candidates(test_id):
     api_url = CANDIDATES_API_URL.format(test_id)
 
     session = requests.Session()
@@ -48,8 +41,8 @@ def get_candidates():
     return candidates, None
 
 
-def get_candidates_for_evaluation():
-    candidates, error = get_candidates()
+def get_candidates_for_evaluation(test_id):
+    candidates, error = get_candidates(test_id)
     if error:
         return None, error
 

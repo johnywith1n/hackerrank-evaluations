@@ -17,31 +17,31 @@ HackerRank Evaluations
             <div class="col-12">
                 <h3>Evaluations Overview</h3>
                 <div>
-                    <ul>
-                        {% for email in assignments_by_user_and_date %}
-                        <li>
-                            Email: {{email}}
+                    {% for test_id in assignments %}
+                    <h4>{{test_id_name_mapping.get(test_id)}}</h4>
+                        {% for email in assignments[test_id] %}
+                        <ul>
+                            <li>Email: {{email}}
+                            {% for date in sorted(assignments[test_id][email].keys()) %}
                             <ul>
-                                {% for date in sorted(assignments_by_user_and_date[email].keys()) %}
-                                <ul>
-                                    <li>
-                                        Date: {{convert_timestamp_to_pacific_datetime(date)}}
-                                        <ol>
-                                        {% for assignment in assignments_by_user_and_date[email][date] %}
-                                            <li>
-                                                <a href="{{CANDIDATE_CODE_REVIEW_EVALUATION_URL.format(assignment.get(Assignment.report_url), code_review_test_id)}}" target="_blank">
-                                                    {{CANDIDATE_CODE_REVIEW_EVALUATION_URL.format(assignment.get(Assignment.report_url), code_review_test_id)}}
-                                                </a>
-                                            </li>
-                                        {% endfor %}
-                                        </ol>
-                                    </li>
-                                </ul>
-                                {% endfor %}
+                                <li>
+                                    Date: {{convert_timestamp_to_pacific_datetime(date)}}
+                                    <ol>
+                                    {% for assignment in assignments[test_id][email][date] %}
+                                        <li>
+                                            <a href="{{ CANDIDATE_CODE_REVIEW_EVALUATION_URL.format(assignment.get(Assignment.report_url), test_id_question_id_mapping.get(assignment.get(Assignment.test_id))) }}" target="_blank">
+                                                {{ CANDIDATE_CODE_REVIEW_EVALUATION_URL.format(assignment.get(Assignment.report_url), test_id_question_id_mapping.get(assignment.get(Assignment.test_id))) }}
+                                            </a>
+                                        </li>
+                                    {% endfor %}
+                                    </ol>
+                                </li>
                             </ul>
-                        </li>
+                            {% endfor %}
+                            </li>
+                        </ul>
                         {% endfor %}
-                    </ul>
+                    {% endfor %}
                 </div>
             </div>
         </div>

@@ -6,8 +6,9 @@ from flask_login import (
     login_required,
 )
 
-from server.datastore_models.appconfigs import AppConfig, AppConfigKeys
 from server.datastore_models.assignments import Assignment
+from server.datastore_models.tests import Test
+
 from server.hackerrank_client import client as hackerrank_client
 
 from server.util import convert_timestamp_to_pacific_datetime
@@ -19,19 +20,24 @@ overview_blueprint = Blueprint('overview', __name__)
 @login_required
 def overview_home():
     assignments = Assignment.get_all_assignments()
-    code_review_test_id = AppConfig.get(AppConfigKeys.QUESTION_ID)
-    if code_review_test_id:
-        code_review_test_id = code_review_test_id.get(AppConfig.value)
-    else:
-        code_review_test_id = ''
-    assignments_by_user_and_date = defaultdict(lambda: defaultdict(list))
+    tests = Test.get_all_tests()
+    test_id_question_id_mapping = {
+        t[Test.test_id]: t[Test.question_id] for t in tests
+    }
+    test_id_name_mapping = {
+        t[Test.test_id]: t[Test.name] for t in tests
+    }
+    assignments_by_test_user_and_date = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
     for a in assignments:
+        test_id = a.get(Assignment.test_id)
+        email = a.get(Assignment.assignee_email)
         date = int(a.get(Assignment.deadline))
-        assignments_by_user_and_date[a.get(Assignment.assignee_email)][date].append(a)
+        assignments_by_test_user_and_date[test_id][email][date].append(a)
     return render_template('overview.html',
+                           assignments=assignments_by_test_user_and_date,
                            sorted=sorted,
-                           assignments_by_user_and_date=assignments_by_user_and_date,
-                           code_review_test_id=code_review_test_id,
+                           test_id_question_id_mapping=test_id_question_id_mapping,
+                           test_id_name_mapping=test_id_name_mapping,
                            convert_timestamp_to_pacific_datetime=convert_timestamp_to_pacific_datetime,
                            Assignment=Assignment,
                            CANDIDATE_CODE_REVIEW_EVALUATION_URL=hackerrank_client.CANDIDATE_CODE_REVIEW_EVALUATION_URL)
@@ -44,13 +50,19 @@ def update_evaluation_status():
     if not assignments:
         return redirect(url_for('overview.overview_home'))
 
-    candidates, error = hackerrank_client.get_candidates_for_evaluation()
-    if error:
-        flash('Unable to fetch hackerrank candidates', 'danger')
-        return redirect(url_for('home.main'))
+    assignments_by_test = defaultdict(list)
+    for a in assignments:
+        assignments_by_test[a[Assignment.test_id]].append(a)
 
-    candidate_ids = set([c['id'] for c in candidates])
-    finished_assignments = [a for a in assignments if a.get(Assignment.candidate_id) not in candidate_ids]
+    finished_assignments = []
+    for test_id in assignments_by_test:
+        candidates, error = hackerrank_client.get_candidates_for_evaluation(test_id)
+        if error:
+            flash('Unable to fetch hackerrank candidates', 'danger')
+            return redirect(url_for('home.main'))
+
+        candidate_ids = set([c['id'] for c in candidates])
+        finished_assignments.extend([a for a in assignments if a.get(Assignment.candidate_id) not in candidate_ids])
     try:
         Assignment.bulk_delete([a.key for a in finished_assignments])
         flash('Removed finished evaluations', 'primary')

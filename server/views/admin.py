@@ -7,7 +7,7 @@ from flask_login import (
     login_required,
 )
 
-from server.datastore_models.appconfigs import AppConfig
+from server.datastore_models.tests import Test
 from server.datastore_models.users import UserPermissions, User, USER_PERMS
 from server.datastore_models.assignments import Assignment
 
@@ -36,35 +36,30 @@ def admin_home():
 @login_required
 @admin_required
 def admin_configs():
-    appconfigs_keys = AppConfig.get_all_appconfig_keys()
     return render_template('admin_configs.html',
-                           appconfigs_keys=appconfigs_keys)
+                           tests=Test.get_all_tests_mapped_by_id())
 
 
-@admin_blueprint.route("/admin/configs", methods=['POST'])
+@admin_blueprint.route("/admin/tests", methods=['POST'])
 @login_required
 @admin_required
-def admin_configs_update():
-    config_key = request.form.get('config-key')
-    config_value = request.form.get('config-value')
+def admin_create_test():
+    test_name = request.form.get('test-name')
+    test_id = request.form.get('test-id')
+    test_question_id = request.form.get('test-question-id')
 
-    if config_key not in AppConfig.get_all_appconfig_keys().keys():
-        flash('Invalid config key', 'danger')
-    else:
-        AppConfig.upsert(config_key, config_value)
-        flash('Config updated!', 'primary')
+    Test.create(test_name, test_id, test_question_id)
+    flash('Test created!', 'primary')
     return redirect(url_for('admin.admin_configs'))
 
-
-@admin_blueprint.route("/admin/configs/<config_key>", methods=['GET'])
+@admin_blueprint.route("/admin/tests", methods=['DELETE'])
 @login_required
 @admin_required
-def admin_configs_lookup(config_key):
-    appconfig = AppConfig.get(config_key)
-    if appconfig:
-        return dict(key=config_key, value=appconfig.get(AppConfig.value))
-    else:
-        return dict(key=config_key, value=None)
+def admin_delete_test():
+    test_id = request.form.get('test-id')
+    Test.delete(test_id)
+    flash('Test deleted!', 'primary')
+    return dict(status='success')
 
 
 @admin_blueprint.route("/admin/perms", methods=['GET'])

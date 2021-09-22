@@ -10,15 +10,17 @@ HackerRank Evaluations
             <div class="col-12">
                 <h3>Your Outstanding Evaluations</h3>
                 <div>
+                    {% for test_id in assignments %}
+                    <h4>{{test_id_name_mapping.get(test_id)}}</h4>
                     <ul>
-                        {% for date in sorted(assignments_by_date.keys()) %}
+                        {% for date in sorted(assignments[test_id].keys()) %}
                         <li>
                             Due: {{convert_timestamp_to_pacific_datetime(date)}}
                             <ol>
-                                {% for assignment in assignments_by_date[date] %}
+                                {% for assignment in assignments[test_id][date] %}
                                  <li>
-                                    <a href="{{CANDIDATE_CODE_REVIEW_EVALUATION_URL.format(assignment.get(Assignment.report_url), code_review_test_id)}}" target="_blank">
-                                        {{CANDIDATE_CODE_REVIEW_EVALUATION_URL.format(assignment.get(Assignment.report_url), code_review_test_id)}}
+                                    <a href="{{ CANDIDATE_CODE_REVIEW_EVALUATION_URL.format(assignment.get(Assignment.report_url), test_id_question_id_mapping.get(assignment.get(Assignment.test_id))) }}" target="_blank">
+                                        {{ CANDIDATE_CODE_REVIEW_EVALUATION_URL.format(assignment.get(Assignment.report_url), test_id_question_id_mapping.get(assignment.get(Assignment.test_id))) }}
                                     </a>
                                 </li>
                                 {% endfor %}
@@ -26,6 +28,7 @@ HackerRank Evaluations
                         </li>
                         {% endfor %}
                     </ul>
+                    {% endfor %}
                 </div>
             </div>
         </div>

@@ -191,7 +191,7 @@ def update_evaluation_status():
 
         candidate_ids = set([c['id'] for c in candidates])
 
-        finished_assignments.extend([a for a in assignments if a.get(Assignment.candidate_id) not in candidate_ids])
+        finished_assignments.extend([a for a in assignments_by_test[test_id] if a.get(Assignment.candidate_id) not in candidate_ids])
     try:
         Assignment.bulk_delete([a.key for a in finished_assignments])
         flash('Removed finished evaluations', 'primary')
